@@ -1,7 +1,7 @@
 # Implementation of Recurrent Neural Networks from Scratch
 :label:`sec_rnn_scratch`
 
-In this section we implement a language model introduce in :numref:`chap_rnn` from scratch. It is based on a character-level recurrent neural network trained on H. G. Wells' *The Time Machine*. As before, we start by reading the dataset first, which is introduced in :numref:`sec_language_model`.
+In this section we implement a language model introduced in :numref:`chap_rnn` from scratch. It is based on a character-level recurrent neural network trained on H. G. Wells' *The Time Machine*. As before, we start by reading the dataset first, which is introduced in :numref:`sec_language_model`.
 
 ```{.python .input  n=14}
 %matplotlib inline
@@ -90,7 +90,7 @@ Now we have all functions defined, next we create a class to wrap these function
 
 ```{.python .input}
 # Saved in the d2l package for later use
-class RNNModelScratch(object):
+class RNNModelScratch:
     """A RNN Model based on scratch implementations."""
 
     def __init__(self, vocab_size, num_hiddens, ctx,
@@ -110,11 +110,11 @@ class RNNModelScratch(object):
 Let's do a sanity check whether inputs and outputs have the correct dimensions, e.g., to ensure that the dimensionality of the hidden state has not changed.
 
 ```{.python .input}
-vocab_size, num_hiddens, ctx = len(vocab), 512, d2l.try_gpu()
+num_hiddens, ctx = 512, d2l.try_gpu()
 model = RNNModelScratch(len(vocab), num_hiddens, ctx, get_params,
                         init_rnn_state, rnn)
 state = model.begin_state(X.shape[0], ctx)
-Y, new_state = model(X.as_in_context(ctx), state)
+Y, new_state = model(X.as_in_ctx(ctx), state)
 Y.shape, len(new_state), new_state[0].shape
 ```
 
@@ -141,7 +141,7 @@ def predict_ch8(prefix, num_predicts, model, vocab, ctx):
     return ''.join([vocab.idx_to_token[i] for i in outputs])
 ```
 
-We test the `predict_rnn` function first. Given that we did not train the network it will generate nonsensical predictions. We initialize it with the sequence `traveller ` and have it generate 10 additional characters.
+We test the `predict_rnn` function first. Given that we did not train the network, it will generate nonsensical predictions. We initialize it with the sequence `traveller ` and have it generate 10 additional characters.
 
 ```{.python .input  n=9}
 predict_ch8('time traveller ', 10, model, vocab, ctx)
@@ -210,7 +210,7 @@ def train_epoch_ch8(model, train_iter, loss, updater, ctx, use_random_iter):
             for s in state:
                 s.detach()
         y = Y.T.reshape(-1)
-        X, y = X.as_in_context(ctx), y.as_in_context(ctx)
+        X, y = X.as_in_ctx(ctx), y.as_in_ctx(ctx)
         with autograd.record():
             py, state = model(X, state)
             l = loss(py, y).mean()
@@ -257,7 +257,7 @@ def train_ch8(model, train_iter, vocab, lr, num_epochs, ctx,
     print(predict('traveller'))
 ```
 
-Now we can train a model. Since we only use $10,000$ tokens in the dataset, so here the model needs more epochs to converge.
+Now we can train a model. Since we only use $10,000$ tokens in the dataset, the model needs more epochs to converge.
 
 ```{.python .input}
 num_epochs, lr = 500, 1
